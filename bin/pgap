@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+PGAP_VERSION="2019-02-11.build3477"
+#PGAP_VERSION="2019-08-22.build3958"
+
+MOUNT="${1}"
+_full="$(realpath ${MOUNT})"
+_base="$(basename ${_full})"
+me=$(whoami)
+_uid=$(id -u $me)
+_gid=$(id -g $me)
+
+IMAGE="nexus166/pgap"
+_img="${IMAGE}:${me}"
+
+docker image inspect ${_img} 1>/dev/null || ( \
+        docker build \
+                --build-arg PGAP_VERSION="${PGAP_VERSION}" \
+                --build-arg UID="${_uid}" \
+                --build-arg GID="${_gid}" \
+                --build-arg NAME="${me}" \
+                --tag "${_img}" \
+                "https://raw.githubusercontent.com/nexus166/pgap-docker/master/Dockerfile"
+        echo -e "\\n\\nhttps://github.com/ncbi/pgap/wiki/Quick-Start\\n\\n"
+)
+
+DOCKER_CONTENT_TRUST= docker run -ti --rm --volume "${_full}:${_full}" "${_img}" ${@:2}
